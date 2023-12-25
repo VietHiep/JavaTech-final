@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Staff List</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body>
+<div class="container">
+    <h1>Staff List</h1>
+    <table class="table table-bordered">
+        <thead>
+        <tr>
+            <th>Full Name</th>
+            <th>Email</th>
+            <th>Profile Picture</th>
+            <th>Enabled</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="user : ${staffList}">
+            <td th:text="${user.fullname}"></td>
+            <td th:text="${user.email}"></td>
+            <td>
+                <img th:src="'data:image/png;base64,' + ${imageUtils.encodeImageToBase64(user.picture)}" alt="Profile Picture" width="50" height="50">
+            </td>
+            <td>
+                <span th:if="${user.isEnable}" th:text="Yes"></span>
+                <span th:if="${!user.isEnable}" th:text="No"></span>
+            </td>
+            <td>
+                <a th:href="@{/admin/staff-details/{userId}(userId=${user.id})}" class="btn btn-primary">View Details</a>
+
+                <form th:action="'/admin/staff-lock/' + ${user.id}" th:method="get" style="display: inline;">
+                    <input type="hidden" name="_method" value="put"/>
+                    <button type="submit" th:if="${user.isEnable}" class="btn btn-danger">Lock Account</button>
+                </form>
+                <form th:action="'/admin/staff-unlock/' + ${user.id}" th:method="get" style="display: inline;">
+                    <input type="hidden" name="_method" value="put"/>
+                    <button type="submit" th:if="${!user.isEnable}" class="btn btn-success">Unlock Account</button>
+                </form>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+</body>
+</html>
