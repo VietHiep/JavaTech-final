@@ -25,7 +25,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Date;
 
-
 @Controller
 @RequestMapping("")
 public class UserController {
@@ -41,22 +40,21 @@ public class UserController {
     private UserRepo userRepo;
     @Autowired
     private ConfirmationTokenRepo confirmationTokenRepo;
+
     @ModelAttribute("changePasswordForm")
     public ChangePasswordForm changePasswordForm() {
         return new ChangePasswordForm();
     }
 
-
-    public UserController(UserService userService, EmailService emailService)
-    {
+    public UserController(UserService userService, EmailService emailService) {
         this.userService = userService;
         this.emailService = emailService;
     }
 
-    //-----------------------------------LOG IN-----------------------------------Done
+    // -----------------------------------LOG
+    // IN-----------------------------------Done
     @GetMapping("/login")
-    public String getLoginPage(Model model, HttpSession session)
-    {
+    public String getLoginPage(Model model, HttpSession session) {
         if (session.getAttribute("loggedInUser") != null) {
             return "redirect:/admin";
         }
@@ -65,8 +63,7 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public String login(@ModelAttribute User user, RedirectAttributes redirectAttributes, HttpSession session)
-    {
+    public String login(@ModelAttribute User user, RedirectAttributes redirectAttributes, HttpSession session) {
         User authenticate = userService.authenticate(user.getUsername(), user.getPassword());
         if (authenticate != null) {
             session.setAttribute("loggedInUser", authenticate);
@@ -88,28 +85,27 @@ public class UserController {
             return "redirect:/login";
         }
     }
-    //###########################------------------------###############################
+    // ###########################------------------------###############################
 
-    //-----------------------------------LOG OUT-----------------------------------Done
+    // -----------------------------------LOG
+    // OUT-----------------------------------Done
     @PostMapping("/logout")
-    public String logout(HttpServletRequest request)
-    {
+    public String logout(HttpServletRequest request) {
         request.getSession().invalidate();
         return "redirect:/login";
     }
-    //###########################------------------------###############################
+    // ###########################------------------------###############################
 
-    //-----------------------------------CHANGE PASSWORD---------------------------Done
+    // -----------------------------------CHANGE
+    // PASSWORD---------------------------Done
     @GetMapping("/changePassword")
-    public String getChangePasswordPage(Model model)
-    {
+    public String getChangePasswordPage(Model model) {
         model.addAttribute("changepasswordRequest", new User());
         return "account/changePassword";
     }
 
     @PostMapping("/changePassword")
-    public String changePassword(@ModelAttribute PasswordChangeRequest request, RedirectAttributes redirectAttributes)
-    {
+    public String changePassword(@ModelAttribute PasswordChangeRequest request, RedirectAttributes redirectAttributes) {
 
         UserService.ChangePasswordResult result = userService.changePassword(request);
         switch (result) {
@@ -117,7 +113,8 @@ public class UserController {
                 redirectAttributes.addFlashAttribute("message", "Change Password successfully");
                 return "redirect:/login";
             case SAME_PASSWORD:
-                redirectAttributes.addFlashAttribute("error", "The new password must be different from the old password");
+                redirectAttributes.addFlashAttribute("error",
+                        "The new password must be different from the old password");
                 return "redirect:/changePassword";
             case USER_NOT_FOUND:
                 redirectAttributes.addFlashAttribute("error", "Username is not exist");
@@ -127,27 +124,26 @@ public class UserController {
                 return "redirect:/changePassword";
         }
     }
-    //###########################------------------------###############################
+    // ###########################------------------------###############################
 
-    //----------------------------CREATE AND CONFIRM SALEPERSON ACCOUNT------------------------Done
+    // ----------------------------CREATE AND CONFIRM SALEPERSON
+    // ACCOUNT------------------------Done
     @RequestMapping(value = "/createAccount", method = RequestMethod.GET)
-    public ModelAndView getCreateAccount(ModelAndView modelAndView, User user)
-    {
+    public ModelAndView getCreateAccount(ModelAndView modelAndView, User user) {
         modelAndView.addObject("user", user);
         modelAndView.setViewName("account/admin/createAccount_page");
         return modelAndView;
     }
 
     @RequestMapping(value = "/createAccount", method = RequestMethod.POST)
-    public ModelAndView createAccount(ModelAndView modelAndView, User user) throws IOException
-    {
+    public ModelAndView createAccount(ModelAndView modelAndView, User user) throws IOException {
         User existingUser = userRepo.findByEmailIgnoreCase(user.getEmail());
         if (existingUser != null) {
             modelAndView.addObject("message", "This email already exists!");
             modelAndView.setViewName("error/error_page");
         } else {
 
-            //Split and set user's account
+            // Split and set user's account
             String mail = user.getEmail();
             String split_mail[] = mail.split("@");
             String user_name = split_mail[0];
@@ -180,9 +176,8 @@ public class UserController {
         return modelAndView;
     }
 
-    @RequestMapping(value="/confirmAccount", method=RequestMethod.GET)
-    public ModelAndView getChangePassword(ModelAndView modelAndView, @RequestParam("token") String confirmationToken)
-    {
+    @RequestMapping(value = "/confirmAccount", method = RequestMethod.GET)
+    public ModelAndView getChangePassword(ModelAndView modelAndView, @RequestParam("token") String confirmationToken) {
         ConfirmationToken token = confirmationTokenRepo.findByConfirmationToken(confirmationToken);
         tokentemp = confirmationToken;
 
@@ -198,8 +193,7 @@ public class UserController {
     }
 
     @PostMapping("/confirmAccount")
-    public ModelAndView changePassword(ModelAndView modelAndView, @ModelAttribute ChangePasswordForm form)
-    {
+    public ModelAndView changePassword(ModelAndView modelAndView, @ModelAttribute ChangePasswordForm form) {
 
         ConfirmationToken token = confirmationTokenRepo.findByConfirmationToken(tokentemp);
 
@@ -210,7 +204,8 @@ public class UserController {
                 token.setUsed(true);
                 confirmationTokenRepo.save(token);
                 user.setEnable(true);
-                UserService.ChangePasswordResult result = userService.changePasswordForNewSale(user, form.getNewPassword());
+                UserService.ChangePasswordResult result = userService.changePasswordForNewSale(user,
+                        form.getNewPassword());
                 if (result == UserService.ChangePasswordResult.SUCCESS) {
                     // Password changed successfully, redirect to /salesperson
                     modelAndView.setViewName("redirect:/salesperson");
@@ -232,21 +227,13 @@ public class UserController {
         return modelAndView;
     }
 
-    //Check expired token
-    private boolean isTokenExpired(ConfirmationToken token)
-    {
+    // Check expired token
+    private boolean isTokenExpired(ConfirmationToken token) {
         return token.getCreatedDate() != null && token.getCreatedDate().before(new Date());
     }
 
-    private byte[] getImageBytes(String imagePath) throws IOException
-    {
+    private byte[] getImageBytes(String imagePath) throws IOException {
         Path path = Paths.get(imagePath);
         return Files.readAllBytes(path);
     }
 }
-
-
-
-
-
-
